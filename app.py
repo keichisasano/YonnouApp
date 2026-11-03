@@ -14,7 +14,7 @@ from PIL import Image
 # ---------------- ここだけ書き換えればOK ----------------
 MODEL = "gemini-flash-lite-latest"  # 精度を上げたい時は "gemini-flash-latest"
 MAX_SIDE = 1024                     # 画像の長辺(小さいほど安い)
-PER_IP_PER_DAY = 5                  # 1人あたりの1日の回数上限
+PER_IP_PER_DAY = 10                  # 1人あたりの1日の回数上限
 TOTAL_PER_DAY = 100                 # 全体の1日の回数上限(費用の安全装置)
 
 PROMPT = """
@@ -23,7 +23,7 @@ PROMPT = """
 
 【各タイプの特徴】
 
-・支配者外向: 口元 笑う時は目が笑っていなくて口だけ笑っています、目が笑ってるかどうか大事です / 表情の雰囲気 狐や蛇系統の顔です。爬虫類系統の顔
+・支配者外向: 口元 笑う時は一見親しみやすく見えますが目が笑っていなくて口だけ笑っています / 表情の雰囲気 狐や蛇系統の顔です。爬虫類系統の顔
 
 ・支配者内向: 目つき 細くて鋭い眼光の時が多い/ 表情の雰囲気 ワニやポメラニアンの系統の顔です。爬虫類系統の顔
 
@@ -121,7 +121,7 @@ def show_result(data):
 
 
 st.title("四脳分類 顔相診断")
-st.caption("非公式の診断ツールです。精度はまだ高くないです。写真は保存されません。ご自身の写真、フリー素材のみ使ってください。\n四脳分類についてはこちらがおすすめです : \nhttps://note.com/novel_tucan8317\nhttps://www.youtube.com/watch?v=UVlgYfU_AFk")
+st.caption("非公式の診断ツールです。精度はまだ高くないので上位5つくらいを参考にしてください。写真は保存されません。ご自身の写真、フリー素材のみ使ってください。\n四脳分類についてはこちらがおすすめです : \nhttps://note.com/novel_tucan8317\nhttps://www.youtube.com/watch?v=UVlgYfU_AFk")
 
 if not API_KEY:
     st.error("APIキーが設定されていません。")
