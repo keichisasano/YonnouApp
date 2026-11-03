@@ -1,5 +1,7 @@
 import io
+import json
 import os
+import re
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -36,7 +38,7 @@ PROMPT = """
 4. 上の「各タイプの特徴」と見比べて、どれだけ当てはまるかを0〜100の整数で採点してください。
 5. reason は「〜という印象を受けます」「〜に近い雰囲気です」のように、印象として述べてください。「〜な性格だ」「〜な人だ」と断定しないでください。
 6. reason には、判断材料に使った顔の部位(目つき・口元・表情)を必ず含めてこう言う特徴があると説明してください。
-7. 【出力形式】 次のJSONだけを出力してください。説明文やコードブロックは付けないでください。 0~100の整数を出力してください{"scores": {"支配者外向": , "支配者内向": , "求道者進歩陽": , "求道者進歩陰": , "求道者調和陽": , "求道者調和陰": , "求道者憑依陽": , "求道者憑依陰": , "求道者演技陽": , "求道者演技陰": , "観察者内向": , "観察者外向": , "求道者ロマンチスト陰": , "求道者ロマンチスト陽": , "遊戯者内向": , "遊戯者外向": }, "best": "タイプ名", "reason": "根拠を2〜3文で"} 
+7. 【出力形式】 次のJSONだけを出力してください。説明文やコードブロックは付けないでください。 0~100の整数を出力してください{"scores": {"支配者外向": , "支配者内向": , "求道者進歩陽": , "求道者進歩陰": , "求道者調和陽": , "求道者調和陰": , "求道者憑依陽": , "求道者憑依陰": , "求道者演技陽": , "求道者演技陰": , "観察者内向": , "観察者外向": , "求道者ロマンチスト陰": , "求道者ロマンチスト陽": , "遊戯者内向": , "遊戯者外向": }, "best": "タイプ名", "reason": "根拠を2〜3文で"} 
 8. reasonではイラストに近いと言うよりこのタイプに近いと言う言い方にしてください
 
 """
@@ -79,6 +81,45 @@ def to_jpeg(img):
     return buf.getvalue()
 
 
+def parse_result(text):
+    """AIの返答からJSON部分を取り出す(```json などが付いていても対応)"""
+    m = re.search(r"\{.*\}", text, re.DOTALL)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(0))
+    except Exception:
+        return None
+
+
+def show_result(data):
+    scores = data.get("scores", {})
+    # スコアが高い順に並べる
+    items = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+    max_len = max((len(k) for k, _ in items), default=1)
+
+    st.subheader("診断結果")
+    st.markdown(f"最も近いタイプ: **{data.get('best', items[0][0] if items else '')}**")
+
+    # ヒストグラム風の横棒グラフ(HTMLで描画)
+    rows = ""
+    for i, (name, score) in enumerate(items):
+        color = "#ff4b4b" if i == 0 else "#4b8bff"
+        rows += f"""
+        <div style="display:flex;align-items:center;margin:4px 0;">
+          <div style="width:{max_len + 1}em;font-size:14px;">{name}</div>
+          <div style="flex:1;background:#eee;border-radius:4px;height:20px;">
+            <div style="width:{score}%;background:{color};height:100%;border-radius:4px;"></div>
+          </div>
+          <div style="width:3em;text-align:right;font-size:14px;">{score}</div>
+        </div>
+        """
+    st.markdown(rows, unsafe_allow_html=True)
+
+    st.markdown("#### 解説")
+    st.write(data.get("reason", ""))
+
+
 st.title("四脳分類 顔相診断")
 st.caption("非公式の診断ツールです。精度はまだ高くないです。写真は保存されません。ご自身の写真、フリー素材のみ使ってください。\n四脳分類についてはこちらがおすすめです : \nhttps://note.com/novel_tucan8317\nhttps://www.youtube.com/watch?v=UVlgYfU_AFk")
 
@@ -119,12 +160,10 @@ if file is not None:
         with st.spinner("診断中..."):
             try:
                 res = get_client().models.generate_content(model=MODEL, contents=contents)
-                st.subheader("診断結果")
-                st.write(res.text)
+                data = parse_result(res.text)
+                if data is None:
+                    st.error("結果の読み取りに失敗しました。もう一度試してください。")
+                else:
+                    show_result(data)
             except Exception:
                 st.error("エラーが発生しました。少し待ってからもう一度試してください。")
-
-
-
-
-
