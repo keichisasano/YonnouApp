@@ -14,7 +14,7 @@ from PIL import Image
 # ---------------- ここだけ書き換えればOK ----------------
 MODEL = "gemini-flash-lite-latest"  # 精度を上げたい時は "gemini-flash-latest"
 MAX_SIDE = 1024                     # 画像の長辺(小さいほど安い)
-PER_IP_PER_DAY = 10                  # 1人あたりの1日の回数上限
+PER_IP_PER_DAY = 15                  # 1人あたりの1日の回数上限
 TOTAL_PER_DAY = 100                 # 全体の1日の回数上限(費用の安全装置)
 
 PROMPT = """
@@ -52,6 +52,8 @@ except Exception:
     API_KEY = os.environ.get("GEMINI_API_KEY")
 
 REF_DIR = Path(__file__).parent / "refs"
+SAMPLE_DIR = Path(__file__).parent / "samples"
+IMG_EXTS = (".jpg", ".jpeg", ".png", ".webp")
 
 
 @st.cache_resource
@@ -79,6 +81,13 @@ def to_jpeg(img):
     buf = io.BytesIO()
     img.save(buf, format="JPEG", quality=90)
     return buf.getvalue()
+
+
+def list_samples():
+    """samples フォルダ内の画像を名前順で返す"""
+    if not SAMPLE_DIR.exists():
+        return []
+    return [p for p in sorted(SAMPLE_DIR.glob("*")) if p.suffix.lower() in IMG_EXTS]
 
 
 def parse_result(text):
@@ -127,10 +136,26 @@ if not API_KEY:
     st.error("APIキーが設定されていません。")
     st.stop()
 
-file = st.file_uploader("顔写真(1枚)", type=["jpg", "jpeg", "png", "webp"])
+# ---------------- 画像の入力(アップロード or サンプル) ----------------
+samples = list_samples()
+photo = None
 
-if file is not None:
-    photo = Image.open(file)
+if samples:
+    mode = st.radio("画像の入力方法", ["アップロード", "サンプルから選ぶ"], horizontal=True)
+else:
+    mode = "アップロード"
+
+if mode == "アップロード":
+    file = st.file_uploader("顔写真(1枚)", type=["jpg", "jpeg", "png", "webp"])
+    if file is not None:
+        photo = Image.open(file)
+else:
+    names = [p.stem for p in samples]
+    choice = st.selectbox("サンプル画像を選んでください", names)
+    chosen = samples[names.index(choice)]
+    photo = Image.open(chosen)
+
+if photo is not None:
     st.image(photo, width=300)
 
     if st.button("診断する", type="primary"):
@@ -150,7 +175,7 @@ if file is not None:
         contents = []
         if REF_DIR.exists():
             for p in sorted(REF_DIR.glob("*")):
-                if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                if p.suffix.lower() in IMG_EXTS:
                     contents.append(f"[代表イラスト] {p.stem}")
                     contents.append(types.Part.from_bytes(data=to_jpeg(Image.open(p)), mime_type="image/jpeg"))
         contents.append("[診断したい顔写真]")
