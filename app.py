@@ -80,7 +80,7 @@ def to_jpeg(img):
 
 
 st.title("四脳分類 顔相診断")
-st.caption("非公式の診断ツールです。精度はまだ高くないです。写真は保存されません。ご自身の写真、フリー素材のみ使ってください。")
+st.caption("非公式の診断ツールです。精度はまだ高くないです。写真は保存されません。ご自身の写真、フリー素材のみ使ってください。\n四脳分類についてはこちらがおすすめです : \nhttps://note.com/novel_tucan8317\nhttps://www.youtube.com/watch?v=UVlgYfU_AFk")
 
 if not API_KEY:
     st.error("APIキーが設定されていません。")
