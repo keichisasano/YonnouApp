@@ -13,7 +13,7 @@ from PIL import Image
 
 # ---------------- ここだけ書き換えればOK ----------------
 MODEL = "gemini-flash-lite-latest"  # 精度を上げたい時は "gemini-flash-latest"
-MAX_SIDE = 1024                     # 画像の長辺(小さいほど安い)
+MAX_SIDE = 2048                     # 画像の長辺(小さいほど安い)
 PER_IP_PER_DAY = 15                  # 1人あたりの1日の回数上限
 TOTAL_PER_DAY = 100                 # 全体の1日の回数上限(費用の安全装置)
 
