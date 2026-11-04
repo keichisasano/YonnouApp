@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-NEW_URL = "https://huggingface.co/spaces/ユーザー名/スペース名"
+NEW_URL = "https://huggingface.co/spaces/keichisasano/Yonnou-App"
 
 st.set_page_config(page_title="移転しました", page_icon="🧠")
 
